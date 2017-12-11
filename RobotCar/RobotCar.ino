@@ -21,12 +21,12 @@ Adafruit_DCMotor *motor2 = AFMS.getMotor(4);
 #define TIMEOUT 2500          //waits for 2500 us for sensor outputs to go low
 #define EMITTER_PIN 2         //emitterPin is the Arduino digital pin that controls whether the IR LEDs are on or off. Emitter is controlled by digital pin 2
 #define DEBUG 0
-
 //sensors 0 through 5 are connected to analog inputs 0 through 5, respectively
 QTRSensorsRC qtrrc((unsigned char[]) {A0,A1,A2,A3} ,NUM_SENSORS, TIMEOUT, EMITTER_PIN);
   
 unsigned int sensorValues[NUM_SENSORS];
-  
+int distanceValue = 0;
+int distanceThresh = 1.2;
 void setup()
 {
 //Serial.begin(9600);  
@@ -44,40 +44,47 @@ int integral = 0;
   
 void loop()
 {
- 
-unsigned int sensors[4];
-int position = qtrrc.readLine(sensors); //get calibrated readings along with the line position, refer to the QTR Sensors Arduino Library for more details on line position.
-/*
-  for (unsigned char i = 0; i < NUM_SENSORS; i++)
-  {
-    Serial.print(sensors[i]);
-    Serial.print('\t');
-  }
-  Serial.println(position);
-
-  delay(250);*/
-
-int error = position - 2000;
-
-int motorSpeed = KP * error + KD * (error - lastError);
-
-//delay(3000);
-
-lastError = error;
-
-int leftMotorSpeed = M1_minumum_speed + motorSpeed;
-int rightMotorSpeed = M2_minumum_speed - motorSpeed;
+distanceValue= analogRead(A4);
+Serial.print(distanceValue);
+if (distanceValue < distanceThresh) {
+  set_motors(0,0);
+}
+else
+{
   
-// set motor speeds using the two motor speed variables above
-set_motors(leftMotorSpeed, rightMotorSpeed);
-/*
-motor1->run(FORWARD);
-motor2->run(FORWARD);
-motor1->setSpeed(50); 
-motor2->setSpeed(50); 
-motor1->run(RELEASE);
-motor2->run(RELEASE);*/
-int temp = position;
+  unsigned int sensors[4];
+  int position = qtrrc.readLine(sensors); //get calibrated readings along with the line position, refer to the QTR Sensors Arduino Library for more details on line position.
+  /*
+    for (unsigned char i = 0; i < NUM_SENSORS; i++)
+    {
+      Serial.print(sensors[i]);
+      Serial.print('\t');
+    }
+    Serial.println(position);
+  
+    delay(250);*/
+  
+  int error = position - 2000;
+  
+  int motorSpeed = KP * error + KD * (error - lastError);
+  
+  //delay(3000);
+  
+  lastError = error;
+  
+  int leftMotorSpeed = M1_minumum_speed + motorSpeed;
+  int rightMotorSpeed = M2_minumum_speed - motorSpeed;
+    
+  // set motor speeds using the two motor speed variables above
+  set_motors(leftMotorSpeed, rightMotorSpeed);
+  /*
+  motor1->run(FORWARD);
+  motor2->run(FORWARD);
+  motor1->setSpeed(50); 
+  motor2->setSpeed(50); 
+  motor1->run(RELEASE);
+  motor2->run(RELEASE);*/
+}
 
 }
   
